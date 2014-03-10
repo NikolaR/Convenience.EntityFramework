@@ -31,5 +31,12 @@ namespace Convenience.EntityFramework.Tests.Experiments
             using (ctx = new ShopContext())
                 Assert.AreEqual(ctx.Customer.Count(), 2);
         }
+
+        [TestMethod]
+        public void random_test()
+        {
+            EfMetaUtils meta = new EfMetaUtils(Db);
+            var navProps = meta.GetNavigationProperties(typeof (Customer));
+        }
     }
 }
