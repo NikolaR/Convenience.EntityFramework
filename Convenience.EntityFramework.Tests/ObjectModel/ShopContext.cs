@@ -14,5 +14,32 @@ namespace Convenience.EntityFramework.Tests.ObjectModel
         public DbSet<Order> Order { get; set; }
 
         public DbSet<LineItem> LineItems { get; set; }
+
+        protected override void OnModelCreating(DbModelBuilder modelBuilder)
+        {
+            var customer = modelBuilder.Entity<Customer>()
+                .ToTable("Customer");
+            customer.HasKey(t => t.Id);
+            customer.Property(t => t.Name);
+            customer.HasMany(t => t.Orders);
+
+            var order = modelBuilder.Entity<Order>()
+                .ToTable("Order");
+            order.HasKey(t => t.Id);
+            order.Property(t => t.OrderTime);
+            order.HasMany(t => t.Items);
+            order.HasOptional(t => t.Customer)
+                .WithMany(c => c.Orders);
+
+            var item = modelBuilder.Entity<LineItem>()
+                .ToTable("LineItem");
+            item.HasKey(t => t.Id);
+            item.Property(t => t.Name);
+            item.Property(t => t.Price);
+            item.HasOptional(t => t.Order)
+                .WithMany(o => o.Items);
+
+            base.OnModelCreating(modelBuilder);
+        }
     }
 }

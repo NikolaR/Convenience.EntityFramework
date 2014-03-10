@@ -36,7 +36,64 @@ namespace Convenience.EntityFramework.Tests.Experiments
         public void random_test()
         {
             EfMetaUtils meta = new EfMetaUtils(Db);
-            var navProps = meta.GetNavigationProperties(typeof (Customer));
+            var navProps = meta.GetNavigationProperties(typeof(Customer));
+        }
+
+        [TestMethod]
+        public void test2()
+        {
+            var pera = new Customer("Pera");
+            Db.Customer.Add(pera);
+            Db.SaveChanges();
+            Assert.AreNotEqual(pera.Id, 0);
+
+            var newPera = new Customer("Pera Peric") { Id = pera.Id };
+            EfWriter.ApplyDbEntityChanges(newPera);
+            Db.SaveChanges();
+
+            ReinitDb();
+            pera = Db.Customer.Find(pera.Id);
+            Assert.AreEqual(pera.Name, "Pera Peric");
+        }
+
+
+
+        [TestMethod]
+        public void test3()
+        {
+            Order order = new Order(DateTime.Now)
+            {
+                Items = new List<LineItem>()
+                {
+                    new LineItem("cheese", 10),
+                    new LineItem("ham", 20),
+                    new LineItem("dough", 5)
+                }
+            };
+            Db.Order.Add(order);
+            Db.SaveChanges();
+            var itemCount = Db.LineItems.Count();
+            Assert.AreEqual(itemCount, 3);
+            
+            var dough = Db.LineItems.Find(order.Items[2].Id);
+            Assert.AreEqual(dough.Name, "dough");
+
+
+            var orderDto = SerializationUtils.DeepClone(order);
+            orderDto.Items[2].Name = "Pizza dough";
+            EfWriter.ApplyDbGraphChanges<Order, LineItem>(orderDto);
+            Db.SaveChanges();
+            ReinitDb();
+            dough = Db.LineItems.Find(order.Items[2].Id);
+            Assert.AreEqual(dough.Name, "Pizza dough");
+
+            orderDto = SerializationUtils.DeepClone(order);
+            orderDto.Items[2].Name = "Special pizza dough!";
+            EfWriter.ApplyDbGraphChanges<Order, Customer>(orderDto);
+            Db.SaveChanges();
+            ReinitDb();
+            dough = Db.LineItems.Find(order.Items[2].Id);
+            Assert.AreEqual(dough.Name, "Pizza dough");
         }
     }
 }

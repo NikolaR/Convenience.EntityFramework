@@ -11,20 +11,39 @@ namespace Convenience.EntityFramework.Tests
     public class DbTestBase
     {
         private Lazy<ShopContext> _db = new Lazy<ShopContext>();
+        private Lazy<EfMetaUtils> _efMetaUtils;
+        private Lazy<EfEntityWriter> _efWriter;
+
+        public void ReinitEfHelpers()
+        {
+            _efMetaUtils = new Lazy<EfMetaUtils>(() => new EfMetaUtils(Db));
+            _efWriter = new Lazy<EfEntityWriter>(() => new EfEntityWriter(Db));
+        }
+
+        public void ReinitDb()
+        {
+            try
+            {
+                if (_db.IsValueCreated && _db.Value.Database.Exists())
+                    _db.Value.Dispose();
+            }
+            catch { }
+
+            _db = new Lazy<ShopContext>();
+            ReinitEfHelpers();
+        }
 
         [TestInitialize]
         public void TestInitialize()
         {
             if (_db.IsValueCreated && _db.Value.Database.Exists())
                 Db.Database.Delete();
+            ReinitDb();
         }
 
         [TestCleanup]
         public virtual void TestCleanup()
         {
-            if (_db.IsValueCreated)
-                Db.Database.Delete();
-
             try
             {
                 _db.Value.Database.Delete();
@@ -46,6 +65,16 @@ namespace Convenience.EntityFramework.Tests
             {
                 return _db.Value;
             }
+        }
+
+        public EfMetaUtils MetaUtils
+        {
+            get { return _efMetaUtils.Value; }
+        }
+
+        public EfEntityWriter EfWriter
+        {
+            get { return _efWriter.Value; }
         }
     }
 }

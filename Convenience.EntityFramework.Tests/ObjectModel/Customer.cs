@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 namespace Convenience.EntityFramework.Tests.ObjectModel
 {
     [DebuggerDisplay("Customer: {Name}")]
+    [Serializable]
     public class Customer
     {
         public Customer()

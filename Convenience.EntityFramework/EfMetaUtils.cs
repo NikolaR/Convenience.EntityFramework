@@ -16,12 +16,12 @@ namespace Convenience.EntityFramework
 {
     public class EfMetaUtils
     {
-        private Lazy<ObjectItemCollection> _objectItemCollection;
-        private Lazy<EntityType[]> _entityTypes;
-        private Lazy<Type[]> _entityClrTypes;
-        private Lazy<EntityInfo[]> _entityInfos;
-        private Lazy<TwoWayDictionary<Type, EntityType>> _entityTypeLookupFac;
-        private EfPropertyUtils _propertyUtils;
+        private readonly Lazy<ObjectItemCollection> _objectItemCollection;
+        private readonly Lazy<EntityType[]> _entityTypes;
+        private readonly Lazy<Type[]> _entityClrTypes;
+        private readonly Lazy<EntityInfo[]> _entityInfos;
+        private readonly Lazy<TwoWayDictionary<Type, EntityType>> _entityTypeLookupFac;
+        private readonly EfPropertyUtils _propertyUtils;
 
         public EfMetaUtils(DbContext ctx)
         {
@@ -65,6 +65,11 @@ namespace Convenience.EntityFramework
             get { return _entityTypeLookupFac.Value; }
         }
 
+        public EfPropertyUtils Properies
+        {
+            get { return _propertyUtils; }
+        }
+
         public ObjectItemCollection GetObjectItemCollection()
         {
             var objContext = ((IObjectContextAdapter)DbContext).ObjectContext;
@@ -73,12 +78,12 @@ namespace Convenience.EntityFramework
             return objectCollection;
         }
 
-        private EntityType[] GetEntityTypes()
+        public EntityType[] GetEntityTypes()
         {
             return ObjectItemCollection.Where(i => i.BuiltInTypeKind == BuiltInTypeKind.EntityType).Cast<EntityType>().ToArray();
         }
 
-        private Type[] GetEntityClrTypes()
+        public Type[] GetEntityClrTypes()
         {
             var clrTypes = new Type[EntityTypes.Length];
             for (int i = 0; i < EntityTypes.Length; i++)
@@ -93,11 +98,13 @@ namespace Convenience.EntityFramework
 
         public bool IsEntity(Type type)
         {
-            return EntityTypeLookup.Contains(type);
+            type = UnwrapProxyType(type);
+            return EntityTypeLookup.Any(et => et.First.IsAssignableFrom(type));
         }
 
         public PropertyInfo[] GetNavigationProperties(Type type)
         {
+            type = UnwrapProxyType(type);
             if (!IsEntity(type))
                 throw new ArgumentException("Provided type is not a mapped entity");
 
@@ -106,10 +113,23 @@ namespace Convenience.EntityFramework
 
         public PropertyInfo[] GetDataProperties(Type type)
         {
+            type = UnwrapProxyType(type);
             if (!IsEntity(type))
                 throw new ArgumentException("Provided type is not a mapped entity");
 
             return _propertyUtils.GetDataProperties(type);
+        }
+
+        /// <summary>
+        /// If provided type is an EntityFramework proxy, unwrap it and return actual entity type
+        /// </summary>
+        /// <param name="type"></param>
+        /// <returns></returns>
+        internal Type UnwrapProxyType(Type type)
+        {
+            while (type != null && !EntityTypeLookup.Contains(type))
+                type = type.BaseType;
+            return type;
         }
     }
 }
