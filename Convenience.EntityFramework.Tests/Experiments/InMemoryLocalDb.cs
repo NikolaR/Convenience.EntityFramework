@@ -48,15 +48,13 @@ namespace Convenience.EntityFramework.Tests.Experiments
             Assert.AreNotEqual(pera.Id, 0);
 
             var newPera = new Customer("Pera Peric") { Id = pera.Id };
-            EfWriter.ApplyDbEntityChanges(newPera);
+            EfWriter.ApplyEntityChanges(newPera);
             Db.SaveChanges();
 
             ReinitDb();
             pera = Db.Customer.Find(pera.Id);
             Assert.AreEqual(pera.Name, "Pera Peric");
         }
-
-
 
         [TestMethod]
         public void test3()
@@ -81,7 +79,7 @@ namespace Convenience.EntityFramework.Tests.Experiments
 
             var orderDto = SerializationUtils.DeepClone(order);
             orderDto.Items[2].Name = "Pizza dough";
-            EfWriter.ApplyDbGraphChanges<Order, LineItem>(orderDto);
+            EfWriter.ApplyGraphChanges<Order, LineItem>(orderDto);
             Db.SaveChanges();
             ReinitDb();
             dough = Db.LineItems.Find(order.Items[2].Id);
@@ -89,7 +87,7 @@ namespace Convenience.EntityFramework.Tests.Experiments
 
             orderDto = SerializationUtils.DeepClone(order);
             orderDto.Items[2].Name = "Special pizza dough!";
-            EfWriter.ApplyDbGraphChanges<Order, Customer>(orderDto);
+            EfWriter.ApplyGraphChanges<Order, Customer>(orderDto);
             Db.SaveChanges();
             ReinitDb();
             dough = Db.LineItems.Find(order.Items[2].Id);

@@ -30,49 +30,49 @@ namespace Convenience.EntityFramework
             private set;
         }
 
-        public void ApplyDbEntityChanges(object entity)
+        public void ApplyEntityChanges(object entity)
         {
             AssertUtils.NotNull(entity, "entity");
             var dbEntity = Ctx.Set(entity.GetType()).Find(Meta.Properies.GetKey(entity));
             CopyDataProperties(entity, dbEntity);
         }
 
-        public void ApplyDbGraphChanges<T1>(object entity)
+        public void ApplyGraphChanges<T1>(object entity)
         {
-            ApplyDbGraphChanges(entity, typeof(T1));
+            ApplyGraphChanges(entity, typeof(T1));
         }
 
-        public void ApplyDbGraphChanges<T1, T2>(object entity)
+        public void ApplyGraphChanges<T1, T2>(object entity)
         {
-            ApplyDbGraphChanges(entity, typeof(T1), typeof(T2));
+            ApplyGraphChanges(entity, typeof(T1), typeof(T2));
         }
 
-        public void ApplyDbGraphChanges<T1, T2, T3>(object entity)
+        public void ApplyGraphChanges<T1, T2, T3>(object entity)
         {
-            ApplyDbGraphChanges(entity, typeof(T1), typeof(T2), typeof(T3));
+            ApplyGraphChanges(entity, typeof(T1), typeof(T2), typeof(T3));
         }
 
-        public void ApplyDbGraphChanges<T1, T2, T3, T4>(object entity)
+        public void ApplyGraphChanges<T1, T2, T3, T4>(object entity)
         {
-            ApplyDbGraphChanges(entity, typeof(T1), typeof(T2), typeof(T3), typeof(T4));
+            ApplyGraphChanges(entity, typeof(T1), typeof(T2), typeof(T3), typeof(T4));
         }
 
-        public void ApplyDbGraphChanges<T1, T2, T3, T4, T5>(object entity)
+        public void ApplyGraphChanges<T1, T2, T3, T4, T5>(object entity)
         {
-            ApplyDbGraphChanges(entity, typeof(T1), typeof(T2), typeof(T3), typeof(T4), typeof(T5));
+            ApplyGraphChanges(entity, typeof(T1), typeof(T2), typeof(T3), typeof(T4), typeof(T5));
         }
 
-        public void ApplyDbGraphChanges<T1, T2, T3, T4, T5, T6>(object entity)
+        public void ApplyGraphChanges<T1, T2, T3, T4, T5, T6>(object entity)
         {
-            ApplyDbGraphChanges(entity, typeof(T1), typeof(T2), typeof(T3), typeof(T4), typeof(T5), typeof(T6));
+            ApplyGraphChanges(entity, typeof(T1), typeof(T2), typeof(T3), typeof(T4), typeof(T5), typeof(T6));
         }
 
-        public void ApplyDbGraphChanges<T>(T entity, params Type[] entityTypesToApply)
+        public void ApplyGraphChanges<T>(T entity, params Type[] entityTypesToApply)
         {
-            ApplyDbGraphChangesIntern(entity, new List<object>(), entityTypesToApply);
+            ApplyGraphChangesIntern(entity, new List<object>(), entityTypesToApply);
         }
 
-        private void ApplyDbGraphChangesIntern(object entity, List<object> appliedEntities, params Type[] entityTypesToApply)
+        private void ApplyGraphChangesIntern(object entity, List<object> appliedEntities, params Type[] entityTypesToApply)
         {
             AssertUtils.NotNull(entity, "entity");
             if (appliedEntities.Contains(entity))
@@ -81,14 +81,14 @@ namespace Convenience.EntityFramework
                 entityTypesToApply = new Type[0];
             Func<Type, bool> shouldApply = (t) => entityTypesToApply.Any(et => t.IsAssignableFrom(et));
 
-            ApplyDbEntityChanges(entity);
+            ApplyEntityChanges(entity);
             appliedEntities.Add(entity);
             var navProps = Meta.GetNavigationProperties(entity.GetType());
             foreach (var propertyInfo in navProps)
             {
                 var value = propertyInfo.GetValue(entity);
                 if (value != null && shouldApply(value.GetType()))
-                    ApplyDbGraphChanges(value);
+                    ApplyGraphChanges(value);
                 var collection = value as IEnumerable;
                 if (collection != null)
                 {
@@ -98,7 +98,7 @@ namespace Convenience.EntityFramework
                         value = enumerator.Current;
                         if (!shouldApply(value.GetType()))
                             break;
-                        ApplyDbGraphChangesIntern(value, appliedEntities, entityTypesToApply);
+                        ApplyGraphChangesIntern(value, appliedEntities, entityTypesToApply);
                     }
                 }
             }
@@ -106,6 +106,8 @@ namespace Convenience.EntityFramework
 
         internal void CopyDataProperties<T>(T source, T target) where T : class, new()
         {
+            // Speed up copying routine
+            // http://msmvps.com/blogs/jon_skeet/archive/2008/08/09/making-reflection-fly-and-exploring-delegates.aspx
             var props = Meta.GetDataProperties(target.GetType());
             foreach (var propertyInfo in props)
                 propertyInfo.SetValue(target, propertyInfo.GetValue(source));
