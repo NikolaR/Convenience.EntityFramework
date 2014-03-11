@@ -30,6 +30,14 @@ namespace Convenience.EntityFramework
             private set;
         }
 
+        public EntityChangeOptions<T> ChangesFrom<T>(T entity)
+        {
+            AssertUtils.NotNull(entity, "entity");
+            if (!Meta.IsEntity(entity.GetType()))
+                throw new ArgumentException("Provided entity is not mapped in current database context");
+            return new EntityChangeOptions<T>(this, entity);
+        }
+
         public void ApplyEntityChanges(object entity)
         {
             AssertUtils.NotNull(entity, "entity");
@@ -88,7 +96,7 @@ namespace Convenience.EntityFramework
             {
                 var value = propertyInfo.GetValue(entity);
                 if (value != null && shouldApply(value.GetType()))
-                    ApplyGraphChanges(value);
+                    ApplyGraphChangesIntern(value, appliedEntities, entityTypesToApply);
                 var collection = value as IEnumerable;
                 if (collection != null)
                 {
@@ -111,6 +119,49 @@ namespace Convenience.EntityFramework
             var props = Meta.GetDataProperties(target.GetType());
             foreach (var propertyInfo in props)
                 propertyInfo.SetValue(target, propertyInfo.GetValue(source));
+        }
+
+        internal void ApplyUsingPaths<T>(EntityChangeOptions<T> entityChangeOptions)
+        {
+            List<object> appliedEntities = new List<object>();
+            ApplyUsingPathsIntern(entityChangeOptions, appliedEntities);
+        }
+
+        internal void ApplyUsingPathsIntern<T>(EntityChangeOptions<T> entityChangeOptions, List<object> appliedEntities)
+        {
+            var entity = entityChangeOptions.Entity;
+            if (appliedEntities.Contains(entity))
+                return;
+
+            ApplyEntityChanges(entity);
+            appliedEntities.Add(entity);
+            var navProps = Meta.GetNavigationProperties(entity.GetType());
+            foreach (var propertyInfo in navProps)
+            {
+                var value = propertyInfo.GetValue(entity);
+                EntityChangeOptions<T> subTree;
+                var include = entityChangeOptions.ShouldIncludeNavigation(propertyInfo.Name, out subTree);
+                if (!include)
+                    continue;
+
+                var collection = value as IEnumerable;
+                if (collection != null)
+                {
+                    // Apply as collection
+                    var enumerator = collection.GetEnumerator();
+                    while (enumerator.MoveNext())
+                    {
+                        subTree.Entity = enumerator.Current;
+                        ApplyUsingPathsIntern(subTree, appliedEntities);
+                    }
+                }
+                else
+                {
+                    // Apply as related entity
+                    subTree.Entity = value;
+                    ApplyUsingPathsIntern(subTree, appliedEntities);
+                }
+            }
         }
     }
 }

@@ -58,6 +58,7 @@
     <Compile Include="EfEntityWriter.cs" />
     <Compile Include="EfMetaUtils.cs" />
     <Compile Include="EfPropertyUtils.cs" />
+    <Compile Include="EntityChangeOptions.cs" />
     <Compile Include="EntityInfo.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

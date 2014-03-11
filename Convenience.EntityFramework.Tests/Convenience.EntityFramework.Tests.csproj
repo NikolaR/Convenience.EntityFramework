@@ -66,6 +66,7 @@
   </Choose>
   <ItemGroup>
     <Compile Include="DbTestBase.cs" />
+    <Compile Include="EntityChangeOptionsTests.cs" />
     <Compile Include="Experiments\InMemoryLocalDb.cs" />
     <Compile Include="ObjectModel\Customer.cs" />
     <Compile Include="ObjectModel\LineItem.cs" />
