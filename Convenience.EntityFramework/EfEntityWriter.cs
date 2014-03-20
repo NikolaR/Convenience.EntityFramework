@@ -89,7 +89,11 @@ namespace Convenience.EntityFramework
                 entityTypesToApply = new Type[0];
             Func<Type, bool> shouldApply = (t) => entityTypesToApply.Any(et => t.IsAssignableFrom(et));
 
-            ApplyEntityChanges(entity);
+            var key = Meta.Properies.GetKey(entity);
+            var defaultKey = Meta.Properies.GetDefaultKey(entity);
+            // Apply only for existing entities
+            if (!CollectionUtils.ContentEqual(key, defaultKey))
+                ApplyEntityChanges(entity);
             appliedEntities.Add(entity);
             var navProps = Meta.GetNavigationProperties(entity.GetType());
             foreach (var propertyInfo in navProps)
@@ -133,6 +137,11 @@ namespace Convenience.EntityFramework
             if (appliedEntities.Contains(entity))
                 return;
 
+            var key = Meta.Properies.GetKey(entity);
+            var defaultKey = Meta.Properies.GetDefaultKey(entity);
+            // Apply only for existing entities
+            if (!CollectionUtils.ContentEqual(key, defaultKey))
+                ApplyEntityChanges(entity);
             ApplyEntityChanges(entity);
             appliedEntities.Add(entity);
             var navProps = Meta.GetNavigationProperties(entity.GetType());

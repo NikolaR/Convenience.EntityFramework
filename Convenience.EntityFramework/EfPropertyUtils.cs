@@ -74,6 +74,44 @@ namespace Convenience.EntityFramework
             return key;
         }
 
+        /// <summary>
+        /// Gets default key value based on type of the key. Used to detect new
+        /// entities.
+        /// </summary>
+        /// <param name="obj"></param>
+        /// <returns></returns>
+        public object[] GetDefaultKey(object obj)
+        {
+            AssertUtils.NotNull(obj, "obj");
+            var type = obj.GetType();
+            return GetDefaultKey(type);
+        }
+
+        /// <summary>
+        /// Gets default key value based on type of the key. Used to detect new
+        /// entities.
+        /// </summary>
+        /// <param name="entityType"></param>
+        /// <returns></returns>
+        public object[] GetDefaultKey(Type entityType)
+        {
+            AssertUtils.NotNull(entityType, "entityType");
+            if (!_metaUtils.IsEntity(entityType))
+                throw new ArgumentException("Provided type is not an entity type");
+            var keyProps = GetKeyProperties(entityType);
+            var key = new object[keyProps.Length];
+            for (int i = 0; i < keyProps.Length; i++)
+                key[i] = GetDefaultTypeValue(keyProps[i].PropertyType);
+            return key;
+        }
+
+        public static object GetDefaultTypeValue(Type type)
+        {
+            if (type.IsValueType)
+                return Activator.CreateInstance(type);
+            return null;
+        }
+
         internal bool IsNavigationProperty(Type entityType, PropertyInfo prop)
         {
             bool isNav;

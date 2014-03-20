@@ -87,5 +87,36 @@ namespace Convenience.EntityFramework.Tests
             Assert.AreEqual(order.Items[2].Name, "Pizza dough");
             Assert.AreEqual(order.Customer.Name, "Milos");
         }
+
+        [TestMethod]
+        public void test4()
+        {
+            Order order = new Order(DateTime.Now)
+            {
+                Items = new List<LineItem>()
+                {
+                    new LineItem("cheese", 10),
+                    new LineItem("ham", 20),
+                    new LineItem("dough", 5)
+                },
+                Customer = new Customer("Nikola")
+            };
+            Db.Order.Add(order);
+            Db.SaveChanges();
+            var itemCount = Db.LineItems.Count();
+            Assert.AreEqual(itemCount, 3);
+
+            var dough = Db.LineItems.Find(order.Items[2].Id);
+            Assert.AreEqual(dough.Name, "dough");
+
+            var orderDto = SerializationUtils.DeepClone(order);
+            orderDto.Items.Add(new LineItem("Ketchup", 1));
+            orderDto.Items.Add(new LineItem("Mayo", 1));
+            EfWriter.ApplyGraphChanges<Order, LineItem>(orderDto);
+            Db.SaveChanges();
+            ReinitDb();
+            order = Db.Order.Find(order.Id);
+            Assert.AreEqual(order.Items.Count, 5);
+        }
     }
 }
