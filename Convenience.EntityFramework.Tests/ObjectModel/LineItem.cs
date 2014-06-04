@@ -9,7 +9,7 @@ namespace Convenience.EntityFramework.Tests.ObjectModel
 {
     [DebuggerDisplay("Item: {Name} (${Price})")]
     [Serializable]
-    public class LineItem
+    public class LineItem : Entity
     {
         public LineItem()
         { }
@@ -20,7 +20,6 @@ namespace Convenience.EntityFramework.Tests.ObjectModel
             Price = price;
         }
 
-        public virtual long Id { get; set; }
         public virtual string Name { get; set; }
         public virtual decimal Price { get; set; }
         public virtual Order Order { get; set; }

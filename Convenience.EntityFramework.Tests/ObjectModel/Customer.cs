@@ -9,7 +9,7 @@ namespace Convenience.EntityFramework.Tests.ObjectModel
 {
     [DebuggerDisplay("Customer: {Name}")]
     [Serializable]
-    public class Customer
+    public class Customer:Entity
     {
         public Customer()
         { }
@@ -18,7 +18,6 @@ namespace Convenience.EntityFramework.Tests.ObjectModel
             Name = name;
         }
 
-        public virtual long Id { get; set; }
         public virtual string Name { get; set; }
         public virtual List<Order> Orders { get; set; }
     }

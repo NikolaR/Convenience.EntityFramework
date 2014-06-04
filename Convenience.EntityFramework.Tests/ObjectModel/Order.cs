@@ -9,7 +9,7 @@ namespace Convenience.EntityFramework.Tests.ObjectModel
 {
     [DebuggerDisplay("Order for {Items.Count} on {OrderTime}")]
     [Serializable]
-    public class Order
+    public class Order : Entity
     {
         public Order()
         { }
@@ -19,7 +19,6 @@ namespace Convenience.EntityFramework.Tests.ObjectModel
             OrderTime = orderTime;
         }
 
-        public virtual long Id { get; set; }
         public virtual DateTime OrderTime { get; set; }
         public virtual List<LineItem> Items { get; set; }
         public virtual Customer Customer { get; set; }
